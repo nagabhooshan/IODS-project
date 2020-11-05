@@ -1,5 +1,5 @@
 # Nagabhooshan Hegde, 05/11/2020 This file includes data wrangling and analysis
-
+#Data wrangling
 # read the data
 lrn14 <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt", sep="\t", header=TRUE)
 
