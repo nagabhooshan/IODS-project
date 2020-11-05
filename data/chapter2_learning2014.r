@@ -63,23 +63,23 @@ head(newdata)
 #stra Average of columns related to strategic learning
 #surf Average of columns related to surface learning
 
-pairs(learning2014[-1], col = learning2014$gender)
+pairs(newdata[-1])
 
 # access the GGally and ggplot2 libraries
 library(GGally)
 library(ggplot2)
 
 # create a more advanced plot matrix with ggpairs()
-p <- ggpairs(learning2014, mapping = aes(col = gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+p <- ggpairs(newdata, mapping = aes(col = gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
 
 # draw the plot
 p
 
 # create an plot matrix with ggpairs()
-ggpairs(learning2014, lower = list(combo = wrap("facethist", bins = 20)))
+ggpairs(newdata, lower = list(combo = wrap("facethist", bins = 20)))
 
 # create a regression model with multiple explanatory variables
-my_model2 <- lm(Points ~ Attitude + stra, data = learning2014)
+my_model2 <- lm(Points ~ Attitude + stra, data = newdata)
 
 #summary
 summary(my_model2)
