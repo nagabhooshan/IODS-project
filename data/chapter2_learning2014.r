@@ -81,5 +81,6 @@ ggpairs(learning2014, lower = list(combo = wrap("facethist", bins = 20)))
 # create a regression model with multiple explanatory variables
 my_model2 <- lm(Points ~ Attitude + stra, data = learning2014)
 
+#summary
 summary(my_model2)
 plot(my_model2, which = c(1,2,5), par(mfrow = c(2,2)))
