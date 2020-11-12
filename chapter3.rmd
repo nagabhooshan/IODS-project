@@ -6,6 +6,9 @@ output: html_document
 ---
 
 ```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
 url = "http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/alc.txt" 
 alc=read.csv(url, sep=",")
 glimpse(alc)
@@ -45,6 +48,8 @@ g4 + geom_boxplot() + ylab("absence")
 ```
 After looking at boxplot, it is clear that free time of student has no effect on alcohol consumption. where as other factors shows relation with alcohol consumption
 ```{r}
+m <- glm(high_use ~ famrel + freetime +goout + absences, 
+         data = alc, family = "binomial")
 summary(m)
 # print out the coefficients of the model
 coef(m)
