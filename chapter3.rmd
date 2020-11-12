@@ -1,0 +1,80 @@
+---
+title: "chapter3"
+author: "Nagabhooshan Hegde"
+date: "12/11/2020"
+output: html_document
+---
+
+```{r}
+url = "http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/alc.txt" 
+alc=read.csv(url, sep=",")
+glimpse(alc)
+```
+Data consists student information from 2 different schools.Data was collected by school reports and quetionnaires.This data has numerical, categorical and logical values.
+Data has 382 rows and 35 columns
+4 variables to consider: famrel , freetime ,goout ,absences
+Family relationship:students with high value may consume less alcohol
+freetime: more free time more going out and consuming alcohol
+goout: more going out and more consuming alcohol
+absences :more absences more alcohol consumption
+
+Let's draw bar chart of all variables, and box plots of variables we are considering
+```{r}
+gather(alc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+#boxplot for family relationship
+g1 = ggplot(alc, aes(x = high_use, y = famrel))
+g1 = g1 + ggtitle("Student family relation vs alcohol consumption")
+g1 + geom_boxplot() + ylab("family relation")
+
+#box plot for freetime
+#par(mfrow=c(2,2))
+g2 = ggplot(alc, aes(x = high_use, y = freetime))
+g2 = g2 + ggtitle("Student freetime vs alcohol consumption")
+g2 + geom_boxplot() + ylab("freetime")
+
+#boxplot for students going out 
+g3 = ggplot(alc, aes(x = high_use, y = goout))
+g3 = g3 + ggtitle("Student go out vs alcohol consumption")
+g3 + geom_boxplot() + ylab("go out")
+
+#boxplot for absence of student
+g4 = ggplot(alc, aes(x = high_use, y = absences))
+g4 = g4 + ggtitle("absence of student vs alcohol consumption")
+g4 + geom_boxplot() + ylab("absence")
+
+```
+After looking at boxplot, it is clear that free time of student has no effect on alcohol consumption. where as other factors shows relation with alcohol consumption
+```{r}
+summary(m)
+# print out the coefficients of the model
+coef(m)
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(m) %>% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+
+```
+Family relation has negative correlation.
+Freetime has no effect 
+Go out has positive correlation
+Absence has positive correlation but very minimal
+Summary shows free time has no effect. and other factors have some effects they can be good parameters
+```{r}
+# predict() the probability of high_use
+probabilities <- predict(m, type = "response")
+# add the predicted probabilities to 'alc'
+alc <- mutate(alc, probability = probabilities)
+
+# use the probabilities to make a prediction of high_use
+alc <- mutate(alc, prediction = probability > 0.5)
+
+# see the last ten original classes, predicted probabilities, and class predictions
+select(alc, failures, absences, sex, high_use, probability, prediction) %>% tail(10)
+
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)
+```
