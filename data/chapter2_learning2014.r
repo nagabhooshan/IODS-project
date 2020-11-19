@@ -46,6 +46,8 @@ learning2014 <-filter(learning2014, Points > 0)
 write.csv(learning2014, "C:\\Users\\nagab\\OneDrive\\Documents\\IODS-project\\IODS-project\\data\\learning2014.csv", row.names = FALSE)
 
 
+
+
 #Analysis
 #Read data from csv
 newdata<- read.csv("C:\\Users\\nagab\\OneDrive\\Documents\\IODS-project\\IODS-project\\data\\learning2014.csv")
