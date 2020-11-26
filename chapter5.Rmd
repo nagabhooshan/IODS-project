@@ -1,0 +1,131 @@
+---
+title: "chapter5"
+author: "Nagabhooshan Hegde"
+date: "26/11/2020"
+output: html_document
+---
+
+This exercise is based on human data which consists of Human Development Index. More information of the data can be found here
+```{r}
+library(corrplot)
+library(tidyverse)
+library(ggplot2)
+library(FactoMineR)
+library(GGally)
+url="http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human2.txt"
+human=read.csv(url)
+summary(human)
+
+```
+
+
+```{r}
+library(ggplot2)
+ggpairs(human)
+```
+
+
+Now this shows distributions and relationship between variables.
+Expected year of schooling is normally distributed
+Distribution of some of the variables are on left Ex. : GNI, Mat-Mor,Ado.Birth and Parli.F
+Distribution of some of the variables are on right Ex. : Labo.FM, Life.EXP
+Summary below shows mean, median, min and max values of the variables
+```{r}
+summary(human)
+```
+
+
+Compute the correlation matrix and visualize it with corrplot:
+
+```{r}
+cor(human) %>% corrplot(type = "upper", tl.cex=0.6)
+```
+
+
+variables ‘Labo.FM' and 'Parli.F' don't have significant correlation with other variables
+Life.Exp and Mat.Mor have highest correlation
+```{r}
+cor(human)
+
+```
+
+
+PCA(Principal Component Analysis)
+
+Perform principal component analysis (PCA) on the not standardized human data
+```{r}
+pca_human <- prcomp(human)
+s <- summary(pca_human)
+
+# rounded percetanges of variance captured by each PC
+pca_pr <- round(1*s$importance[2, ]*100, digits = 1)
+
+# create object pc_lab to be used as axis labels
+pc_lab=paste0(names(pca_pr), " (", pca_pr, "%)")
+
+# draw a biplot
+biplot(pca_human, cex = c(0.5, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+
+```
+
+
+it clearly shows that GNI is only explaining variable for non-standardized data.
+
+Standardize the variables in the human data
+
+```{r}
+human_std <- scale(human)
+
+## PCA model and biplot
+pca_human <- prcomp(human_std)
+
+s1 <- summary(pca_human)
+
+# rounded percetanges of variance captured by each PC
+pca_pr <- round(1*s1$importance[2, ]*100, digits = 1)
+
+# create object pc_lab to be used as axis labels
+pc_lab=paste0(names(pca_pr), " (", pca_pr, "%)")
+
+# draw a biplot
+biplot(pca_human, cex = c(0.5, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+```
+
+
+Comparision between standardised and non standardised PCA
+PCA with non standardised data has only one arrow of GNI, but PCA with standardised data shows multiple arrows pointing at different directions
+In PCA of standardised data, PCA1 explains 53.6% of variance and PCA2 explains 16.2% of variance
+
+MCA
+
+```{r}
+data(tea)
+
+print(str(tea))
+```
+
+for simplicity lets consider only few variables
+
+```{r}
+keep_columns <- c("Tea", "How", "sex", "sugar","where", "lunch")
+tea_time <- subset(tea, select=keep_columns)
+# visualize the dataset
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+print(summary(tea_time))
+```
+
+multiple correspondence analysis
+
+```{r}
+#MCA
+mca <- MCA(tea_time, graph = FALSE)
+# visualize MCA
+plot(mca, invisible=c("ind"))
+```
+
+
+Multiple Correspondence Analysis (MCA) is a method that allows studying the association between two or more qualitative variables
+
+No sugar is close to females
+
+sugar is close to males 

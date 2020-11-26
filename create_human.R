@@ -35,3 +35,34 @@ head(human)
 
 # Write CSV file
 write.csv(human, file ="Data/human.csv", row.names = FALSE)
+
+#Week 5 Data wrangling
+human <- read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human1.txt", sep=",", header=TRUE)
+str(human)
+names(human)
+summary(human)
+#Mutate the data: GNI from string to numeric
+library(tidyr)
+library(stringr)
+human$GNI=str_replace(human$GNI, pattern=",", replace ="") %>% as.numeric
+
+#Exclude unneeded variables
+human <- dplyr::select(human, one_of("Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F"))
+
+#Remove all rows with missing values
+human <- filter(human, complete.cases(human) == TRUE)
+str(human)
+
+# Look at the last 10 observations of human:
+tail(human, 10)
+
+# choose everything except last 7 observations:
+last <- nrow(human) - 7
+human <- human[1:last, ]
+
+# Add countries as rownames and remove country variable
+rownames(human) <- human$Country
+human <- dplyr::select(human, -Country)
+dim(human)
+
+write.csv(human, file ="Data/human.csv", row.names = TRUE)
