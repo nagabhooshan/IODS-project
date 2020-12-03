@@ -1,0 +1,239 @@
+---
+title: "chapter6.rmd"
+author: "Nagabhooshan Hegde"
+date: "03/12/2020"
+output: html_document
+---
+Chapter 6
+
+Task 1: Analysis of RATS data
+
+```{r}
+
+library(stats)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+
+Let us load RATS data and look at its structure
+
+```{r}
+url_RATS="https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt"
+
+RATS=read.csv(url_RATS, sep="\t")
+RATS$ID=as.factor(RATS$ID)
+RATS$Group=as.factor(RATS$Group)
+glimpse(RATS)
+
+```
+
+
+Get the data into long form
+
+```{r}
+RATSL <- RATS %>%
+  gather(key = WD, value = Weight, -ID, -Group) %>%
+  mutate(Time = as.integer(substr(WD,3,4))) 
+
+str(RATSL)
+```
+
+
+Let's plot the data
+
+```{r}
+ggplot(RATSL, aes(x = Time, y = Weight, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(RATSL$Weight), max(RATSL$Weight)), name = "Weight (grams)")+
+  scale_x_continuous(name = "Time (days)")
+```
+
+
+Plot shows Groups have significant difference. Group 1 is seperated from 2 and 3. Group 2 has a clear outlier, and there is not much difference between Group 2 and 3
+
+Now let's try to standardize and plot the data
+
+```{r}
+RATSL <- RATSL %>%
+  group_by(Time) %>%
+  mutate( stdWeight = (Weight - mean(Weight))/sd(Weight) ) %>%
+  ungroup()
+glimpse(RATSL)
+```
+
+
+```{r}
+ggplot(RATSL, aes(x = Time, y = stdWeight, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(name = "Standardized Weight (grams)")+
+  scale_x_continuous(name = "Time (days)")+
+  ggtitle("Standardized weight of rats in three different diet groups")
+```
+
+
+Let us plot boxplot of the data
+
+```{r}
+ggplot(RATSL, aes(x = factor(Time), y = Weight, fill = Group)) +
+  geom_boxplot(position = position_dodge(width = 0.9)) + 
+  theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(legend.position = c(0.9,0.4))+ 
+  scale_x_discrete(name = "week") +
+  scale_fill_grey(start = 0.5, end = 1)
+```
+
+
+This plot shows clear difference between groups and weight is gradually increasing over time. There are many outliers in each groups
+
+Lets calculate mean for all groups
+
+```{r}
+RATS2 <- RATSL %>%
+  group_by(Group, ID) %>%
+  summarise( mean=mean(Weight) ) %>%
+  ungroup()
+
+glimpse(RATS2)
+```
+
+Plot boxplot of the mean Vs group
+
+```{r}
+ggplot(RATS2, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(weight)")
+```
+
+Most clear outlier group is 2, so let's remove it
+
+```{r}
+#Create new data removing outlier
+RATS3 <- RATS2 %>%
+  filter(mean < 550)
+
+ggplot(RATS3, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(weight), over time period")
+
+
+```
+
+
+This shows standard deviation within group is small but differences between groups can be seen clearly
+
+
+```{r}
+fit <- lm(mean ~ Group, data = RATS3)
+summary(fit)
+
+# Compute the analysis of variance table for the fitted model with anova()
+anova(fit)
+
+```
+
+
+After examining this result, we can see that there are statistically significant differences between the diet groups
+
+
+
+
+Task 2 : Analysis of BPRS data
+
+```{r}
+url="https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/BPRS.txt"
+BPRS=read.csv(url, sep=" ")
+
+BPRS$treatment <- factor(BPRS$treatment)
+BPRS$subject <- factor(BPRS$subject)
+
+# Convert to long form
+BPRSL <-  BPRS %>% gather(key = weeks, value = bprs, -treatment, -subject)
+
+# Extract the week number
+BPRSL <-  BPRSL %>% mutate(week = as.integer(substr(weeks,5,5)))
+glimpse(BPRSL)
+
+```
+
+
+Lets plot the data
+
+```{r}
+ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject))+ 
+  geom_line() + 
+  scale_linetype_manual(values = rep(1:10, times=4)) + 
+  facet_grid(. ~ treatment, labeller = label_both) + 
+  theme_bw() + 
+  theme(legend.position = "none") + 
+  theme(panel.grid.minor.y = element_blank()) + 
+  scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
+```
+
+
+```{r}
+#Create regression model 
+BPRSL_reg <- lm(bprs ~ week + treatment, data = BPRSL)
+summary(BPRSL_reg)
+```
+
+
+This shows week variable is statistically significant
+
+```{r}
+library("lme4")
+# Creating a random intercept model with subject as random factor
+BPRSL_ref1 <- lmer(bprs ~ week + treatment + (1 | subject), data = BPRSL, REML = FALSE)
+summary(BPRSL_ref1)
+
+```
+
+
+Summary shows standard deviation is high that means there is variablity between subjects
+
+```{r}
+BPRSL_ref2 <- lmer(bprs ~ week + treatment + (week | subject), data = BPRSL, REML = FALSE)
+summary(BPRSL_ref2)
+
+```
+
+
+performing an ANOVA test on the two models
+
+```{r}
+
+anova(BPRSL_ref2, BPRSL_ref1)
+```
+
+
+
+Create a vector of the fitted values
+
+```{r}
+Fitted <- fitted(BPRSL_ref2)
+BPRSL <- BPRSL %>%
+  mutate(Fitted)
+```
+
+
+```{r}
+ggplot(BPRSL, aes(x = week, y = Fitted, linetype = subject)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
+
+```
+
+So this shows both original and fitted values decrease over week
